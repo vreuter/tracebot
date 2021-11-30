@@ -1,0 +1,8 @@
+# conda env create (or update if already created) -f environment.yml (optionally with -p /path/to/your/environment)
+name: tracebot
+dependencies:
+    - python=3.8
+    - pip
+    - pip:
+        - pyserial
+        - pyyaml
