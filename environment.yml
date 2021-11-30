@@ -6,3 +6,4 @@ dependencies:
     - pip:
         - pyserial
         - pyyaml
+        - pywin32==225
