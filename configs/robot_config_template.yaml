@@ -48,64 +48,64 @@ positions:
 # - image: 1, sets the status to "image" and waits for the status to change to "robot" again before proceeding.
 
 sequences:
-    -seq_A:
-        n_cycles: 1
-        sequence:
-            - probe: strip
-            - pause: 1
-            - pump: 60
-            - pause: 1
-            - probe: wash
-            - pause: 1
-            - pump: 10
-            - pause: 120
-            - pump: 60
-            - pause: 1
-            - probe: SSC
-            - pause: 1
-            - pump: 45
-            - pause: 30
-            - image: 1
-    -seq_B:
+#    seq_A:
+#        n_cycles: 1
+#        sequence:
+#            - probe: strip
+#            - pause: 1
+#            - pump: 6
+#            - pause: 1
+#            - probe: wash
+#            - pause: 1
+#            - pump: 10
+#            - pause: 12
+#            - pump: 6
+#            - pause: 1
+#            - probe: SSC
+#            - pause: 1
+#            - pump: 4
+#            - pause: 3
+#            - image: 1
+    seq_B:
         n_cycles: all
         first_well: A1
-        last_well: B7
+        last_well: A3
         sequence:
             - probe: wp
             - pause: 1
-            - pump: 45
+            - pump: 4
             - pause: 1
             - probe: wash
             - pause: 1
             - pump: 10
-            - pause: 120
-            - pump: 60
-            - pause: 30
+            - pause: 12
+            - pump: 6
+            - pause: 3
             - probe: SSC
             - pause: 1
-            - pump: 45
-            - pause: 30
-            - image: 1
+            - pump: 4
+            - pause: 3
+#            - image: 1
             - probe: strip
             - pause: 1
-            - pump: 60
+            - pump: 6
             - pause: 1
             - probe: wash
             - pause: 1
-            - pump: 10
-            - pause: 120
-            - pump: 60
+            - pump: 3
+            - pause: 12
+            - pump: 6
             - pause: 1
-    -seq_C:
+    seq_C:
         n_cycles: 1
         sequence:
             - probe: strip
             - pause: 1
-            - pump: 60
+            - pump: 6
             - pause: 1
             - probe: wash
             - pause: 1
             - pump: 10
-            - pause: 120
-            - pump: 60
+            - pause: 12
+            - pump: 6
             - pause: 1
