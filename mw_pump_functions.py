@@ -46,6 +46,8 @@ class Robot():
             self.pump = Bartels(self.config)
         elif self.config['pump_type'] == 'CPP':
             self.pump = CPP_pump(self.config)
+        elif self.config['pump_type'] == 'CPP_dual':
+            self.pump = CPP_pump_dual(self.config)
         else:
             logging.error('Unknown pump type.')
 
@@ -464,6 +466,18 @@ class CPP_pump():
             d = 1 #Counterclockwise direction
             run_time = abs(run_time)
         self.pump.write(('/0S1'+str(self.config['CPP_speed'])+'D'+str(d)+'I1M'+str(run_time*1000)+'I0R\n').encode('utf-8'))
+        time.sleep(run_time)
+
+class CPP_pump_dual(CPP_pump):
+
+    def pump_cycle(self, run_time):
+        p = '1' #Pump 1
+        I = '10'
+        if run_time < 0:
+            p = '2' #pump 2
+            I = '01'
+            run_time = abs(run_time)
+        self.pump.write(('/0S'+p+str(self.config['CPP_speed'])+'I'+I+'M'+str(run_time*1000)+'I00R\n').encode('utf-8'))
         time.sleep(run_time)
 
 class Stage(Robot):
