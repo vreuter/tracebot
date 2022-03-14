@@ -1,0 +1,96 @@
+#COM ports for pump and stage:
+pump_port: COM7
+stage_port: COM8
+
+#Pump settings:
+pump_type: CPP #Can be 'CPP', 'CPP_dual', or 'bartels'
+bartels_freq: 150
+bartels_voltage: 150
+CPP_speed: 999 #1-999
+
+#Well plate setup, coordinates in mm compared to A1 well:
+well_plate:
+    bottom_right:
+      x: 99
+      y: 63
+    top_left:
+      x: 0
+      y: 0
+    columns: 12
+    rows: 8
+    first_probe: A1   #First well position in sequence
+    last_probe: B6      # Last well position in sequence
+    well_spacing: 9     #in mm
+    z_base: -42       #Depth probe goes into well from zero position in mm.
+
+#Custom positions outside of well plate, coordinates in mm compared to A1 position.
+positions:
+    image:
+      x: 20
+      y: 102
+      z: -40
+    strip:
+      x: 20
+      y: 121
+      z: -40
+    wash:
+      x: 20
+      y: 137
+      z: -40
+
+#The sequence to follow. 
+#Possible actions and parameters are:
+# - probe: wp or custom position named as listed above 
+# - pump: time for pumping in seconds. Negative times pumps in reverse (if pump: CPP) or pumps with second pump (if pump: CPP_dual)
+# - pause: pause/wait time in seconds
+# - image: 1, sets the status to "image" and waits for the status to change to "robot" again before proceeding.
+sequences:
+  seq_A:
+    n_cycles: 1
+    sequence:
+      - probe: strip
+      - pause: 1
+      - pump: 5
+      - pause: 1
+      - probe: wash
+      - pause: 1
+      - pump: 5
+      - pause: 30
+      - probe: image
+      - pause: 1
+      - pump: 5
+      - pause: 5
+      - image: 1
+  seq_B:
+    n_cycles: all
+    first_well: A1
+    last_well: C12
+    sequence:
+      - probe: wp
+      - pause: 1
+      - pump: 10
+      - pause: 1
+      - probe: wash
+      - pause: 1
+      - pump: 8
+      - pause: 10
+      - pump: 10
+      - pause: 10
+      - probe: image
+      - pause: 1
+      - pump: 10
+      - pause: 1
+      - image: 1
+      - probe: strip
+      - pause: 1
+      - pump: 10
+      - pause: 1
+      - probe: wash
+      - pause: 1
+      - pump: 10
+      - pause: 10
+      - pump: 10
+      - pause: 1
+      - pump: -10
+      - pump: 10
+      - pause: 1
