@@ -7,3 +7,4 @@ dependencies:
         - pyserial
         - pyyaml
         - pywin32==225
+        - pysimplegui

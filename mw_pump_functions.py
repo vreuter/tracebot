@@ -81,7 +81,6 @@ class Robot():
         if hasattr(self, 'pump'):
             self.pump.config = self.config
 
-        self.all_coords, self.sel_coords = self.wp_coord_list()
         logging.info('Config refreshed.')
 
     def update_status(self, new_data):
@@ -133,8 +132,8 @@ class Robot():
         tl_y=config['top_left']['y']
         br_x=config['bottom_right']['x']
         br_y=config['bottom_right']['y']
-        first_probe=sequence['first_probe']
-        last_probe=sequence['last_probe']
+        first_probe=sequence['first_well']
+        last_probe=sequence['last_well']
 
         # Make list of well names selected in config file
         all_wells=[]
@@ -172,14 +171,12 @@ class Robot():
             num_cycles: Int with number of cycles.
 
         '''
-        config=self.config
-        sel_coords = self.sel_coords
         wells_seq = 0
-        for seq in config['sequence']:
+        for seq in sequence['sequence']:
             for val in seq.values():
                 if val == 'wp':
                     wells_seq += 1
-        wells=len(sel_coords.keys())
+        wells=len(self.sel_coords.keys())
         num_cycles=wells//wells_seq
         print('Calculated number of cycles is ', num_cycles)
         return num_cycles
@@ -197,9 +194,6 @@ class Robot():
         Runs a single sequence as defined in the config file.
         '''
         config=self.config
-        all_coords = self.all_coords
-        sel_coords = self.sel_coords
-        sel_coord_list=list(sel_coords.keys())
 
         for a in sequence['sequence']:                # Sequences is defined as list of subsequences in config file.
         #for a in seq:                                # Loop through each sequence in turn
@@ -212,15 +206,14 @@ class Robot():
                     raise SystemExit
 
                 current_pos=self.read_status()['current_well']
-                coords=all_coords[current_pos]
+                coords=self.all_coords[current_pos]
                 self.stage.move_stage(coords)
                 while self.stage.check_stage() != 'Idl': #Wait until move is done before proceeding.
                     time.sleep(2)
                 logging.info('Probe at '+str(current_pos))
-                
-                i=sel_coord_list.index(current_pos)
+                i=self.sel_coord_list.index(current_pos)
                 try:
-                    next_well=sel_coord_list[i+1]
+                    next_well=self.sel_coord_list[i+1]
                 except IndexError:
                     logging.info('Last well reached')
                     next_well='Last'
@@ -286,12 +279,17 @@ class Robot():
         
         config=self.config
 
-        for i, seq in enumerate(config['sequences']):
+        for i, seq_name in enumerate(config['sequences']):
+            seq = config['sequences'][seq_name]
+            print(seq)
             try: 
                 first_well = seq['first_well']
                 last_well = seq['last_well']
                 self.all_coords, self.sel_coords = self.wp_coord_list(seq)
+                self.sel_coord_list=list(self.sel_coords.keys())
+                print('Sequence with wells: ', self.sel_coords)
             except KeyError: # If first or last well are not defined.
+                print('well definition not found')
                 self.all_coords, self.sel_coords = (None, None)
 
             if seq['n_cycles'] == 'all':
@@ -302,9 +300,12 @@ class Robot():
             self.set_command('robot')
 
             if restart:
-                self.set_well(seq['first_well'])
+                try:
+                    self.set_well(seq['first_well'])
+                except KeyError: #Sequence has no wells
+                    pass
             for cycle in range(num_cycles):
-                logging.info('Starting cycle ' + str(cycle) + ' of ' +str(num_cycles) + ' in sequence no. ' +str(i) +'.') 
+                logging.info('Starting cycle ' + str(cycle+1) + ' of ' +str(num_cycles) + ' in sequence ' +str(seq_name) +'.') 
                 self.single_cycle(seq)
 
     '''
@@ -486,9 +487,10 @@ class Stage(Robot):
         self.config = config
         try:
             self.stage = self.initialize_grbl()
-            time.sleep(0.2)
+            time.sleep(1)
+            self.zero_stage()
         except serial.SerialException:
-            logging.error('No pump found on ' + self.config['pump_port'])
+            logging.error('No stage found on ' + self.config['stage_port'])
 
     def initialize_grbl(self):
         s = serial.Serial(port=self.config['stage_port'],baudrate=115200) # open grbl serial port
@@ -497,7 +499,7 @@ class Stage(Robot):
         s.flushInput()  # Flush startup text in serial input
         s.write(('? \n').encode('utf-8')) # Request machine status
         grbl_out = s.readline().decode('utf-8') # Wait for grbl response with carriage return
-        logging.info('GRBL initialized:' +grbl_out)
+        logging.info('GRBL stage interface initialized:' +grbl_out)
         return s
 
     def zero_stage(self):
