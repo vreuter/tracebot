@@ -462,12 +462,18 @@ class CPP_pump():
         self.pump.close()
 
     def pump_cycle(self, run_time):
+        
         d = 0 #Clockwise direction
         if run_time < 0:
             d = 1 #Counterclockwise direction
             run_time = abs(run_time)
         self.pump.write(('/0S1'+str(self.config['CPP_speed'])+'D'+str(d)+'I1M'+str(run_time*1000)+'I0R\n').encode('utf-8'))
+        logging.info('Running pump for ', run_time, 's.')
         time.sleep(run_time)
+    
+    def stop_pump(self):
+        self.pump.write(('/0T\n').encode('utf-8'))
+        logging.info('Stopping pump.')
 
 class CPP_pump_dual(CPP_pump):
 
@@ -531,3 +537,11 @@ class Stage(Robot):
             grbl_out = stage.readline().decode('utf-8') # Wait for grbl response with carriage return
             logging.info('GRBL out:'+grbl_out)
             logging.info('Moved to '+axis.upper()+'='+str(pos[axis]))
+
+    def stop_stage(self):
+        self.stage.write(('! \n').encode('utf-8'))
+        time.sleep(0.5)
+        self.stage.write(('^X \n').encode('utf-8'))
+        logging.info('Stage stopped')
+        grbl_out = self.stage.readline().decode('utf-8') # Wait for grbl response with carriage return
+        logging.info('GRBL out: '+grbl_out)

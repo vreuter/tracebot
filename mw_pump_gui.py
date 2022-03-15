@@ -29,12 +29,14 @@ def main():
         sg.Text('Y:'), sg.InputText(size=(6, None), key='-Y-'),
         sg.Text('Z:'), sg.InputText(size=(6, None), key='-Z-'),
         sg.Button('Move to coord.', key='-MOVE-'),
-        sg.Button('Move to zero', key='-MOVE_ZERO-')], 
+        sg.Button('STOP', key='-STOP_STAGE-')], 
         [sg.InputCombo('None', size=(20, 1), key='-POSITION-'), 
-        sg.Button('Move to position', key='-MOVE_POS-')],
+        sg.Button('Move to position', key='-MOVE_POS-'),
+        sg.Button('Move to zero', key='-MOVE_ZERO-')],
         [sg.Text('_'*30)],
         [sg.Text('Pump time [s]'), sg.InputText(size=(4, None), key='-PUMP_TIME-', default_text='10'),
-        sg.Button('Pump cycle', key='-PUMP-')],
+        sg.Button('Pump cycle', key='-PUMP-'),
+        sg.Button('Stop pump', key='-STOP_PUMP-')],
         [sg.Text('_'*30)],
         [sg.Button('Start robot', key='-START-'),
         sg.Checkbox('Restart?', key='-RESTART-', default=True),
@@ -98,6 +100,11 @@ def main():
                 R.pump.pump_cycle(int(values['-PUMP_TIME-']))
             except (UnboundLocalError, AttributeError):
                 logging.info('Robot or pump not initialized.')
+        elif event == '-STOP_PUMP-':
+            try:
+                R.pump.stop_pump()
+            except (UnboundLocalError, AttributeError):
+                logging.info('Robot or pump not initialized.')
 
         elif event == '-MOVE-':
             pos = {'x': values['-X-'], 'y': values['-Y-'], 'z': values['-Z-']}
@@ -107,6 +114,12 @@ def main():
                 R.stage.move_stage(pos)
             except (UnboundLocalError, AttributeError):
                 logging.info('Robot or stage not initialized.')
+        
+        elif event == '-STOP_STAGE-':
+            try:
+                R.stage.stop_stage()
+            except (UnboundLocalError, AttributeError):
+                logging.info('Robot or pump not initialized.')
 
         elif event == '-MOVE_ZERO-':
             pos = {'x': 0, 'y': 0, 'z': 0}
@@ -146,6 +159,8 @@ def main():
         elif event == '-STOP-':
             window['-START-'].update(disabled=False)
             try:
+                R.stage.stop_stage()
+                R.pump.stop_pump()
                 R.stop.set()
                 if not run_wp_cycle.is_alive():
                     logging.info('Robot stopped.')
@@ -154,6 +169,9 @@ def main():
 
         elif event in  (None, 'Exit'):
             try:
+                R.stage.stop_stage()
+                R.pump.stop_pump()
+                R.stop.set()
                 R.close_connections()
                 R.stop_socket_server()
             except (UnboundLocalError, AttributeError):
