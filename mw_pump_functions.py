@@ -470,7 +470,7 @@ class CPP_pump():
             run_time = abs(run_time)
         self.pump.write(('/0S1'+str(self.config['CPP_speed'])+'D'+str(d)+'I1M'+str(run_time*1000)+'I0R\n').encode('utf-8'))
         logging.info('Running pump for '+str(run_time)+' s.')
-        #time.sleep(run_time)
+        time.sleep(run_time)
     
     def stop_pump(self):
         self.pump.write(('/0T\n').encode('utf-8'))
