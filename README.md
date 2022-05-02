@@ -1,3 +1,8 @@
+***TRACEBOT***
+This repository contains Python code for controlling a 3-axis GRBL stage together with a either Piezo pumps (Bartel's MP-6) or miniature peristaltic pumps (Jobst CPP1) and their synchronization with a microscope, currently implemented for a Nikon instrument.
+See instructions below for installation and usage. 
+Please have a look at our manuscript (https://doi.org/10.1101/2021.04.12.439407) for details on the setup and application.
+
 **Setup robot PC and instrument PC**
 
 Connect laptop PC power, 3-axis stage power, pump power (for Bartel’s pumps), and USB from stage and pump to PC.
