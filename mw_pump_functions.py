@@ -253,10 +253,18 @@ class Robot():
                     raise SystemExit
                 self.set_command('image')
                 logging.info('Starting imaging.')
-                status_mod_time_old = os.stat('status.json').st_mtime
+                try:
+                    status_mod_time_old = os.stat('status.json').st_mtime
+                except OSError:
+                    time.sleep(5)
+                    status_mod_time_old = os.stat('status.json').st_mtime
                 time.sleep(2)
                 while True:
-                    status_mod_time_new = os.stat('status.json').st_mtime
+                    try:
+                        status_mod_time_new = os.stat('status.json').st_mtime
+                    except OSError:
+                        time.sleep(5)
+                        status_mod_time_new = os.stat('status.json').st_mtime
                     if status_mod_time_new == status_mod_time_old:
                         time.sleep(5)
                     else:
