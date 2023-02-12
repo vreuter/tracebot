@@ -33,6 +33,7 @@ class Robot():
         self.config_path = config_path
         self.config = self.load_config()
         self.status_file = 'status.json'
+
         self.start_stage()
         time.sleep(1)
         self.start_pump()
@@ -119,7 +120,7 @@ class Robot():
         time.sleep(int(sleep_time))
         logging.info('Paused for '+str(sleep_time))
 
-    def wp_coord_list(self, sequence):
+    def wp_coord_list(self, sequence, custom_order = None):
     # Generate coordinate list for whole and selected wells of a 96-well plate.
     # Also adjusts for a rotated plate by using measured top left and bottom right positions from
     # config file.
@@ -143,8 +144,8 @@ class Robot():
                 all_wells.append(chr(65+i)+str(j+1))
         
         # Calculate adjustment based on measured top left and bottom right well positions 
-        well_adjust_x=(1-(br_x-tl_x)/(12*well_spacing))
-        well_adjust_y=(1-(br_y-tl_y)/(8*well_spacing))
+        well_adjust_x=(1-(br_x-tl_x)/(int(columns)*well_spacing))
+        well_adjust_y=(1-(br_y-tl_y)/(int(rows)*well_spacing))
         
         # Generate list of all well coordinates adjusted for rotation.
         all_coords={} 
@@ -153,9 +154,16 @@ class Robot():
                 all_coords[chr(65+i)+str(1+j)]={'x': tl_x+j*well_spacing+i*well_adjust_x, 'y': tl_y+i*well_spacing+j*well_adjust_y, 'z':config['z_base']}
         
         # Make coordinate list for only the selected wells
-        first_well=all_wells.index(first_probe)
-        last_well=all_wells.index(last_probe)
-        sel_wells=all_wells[first_well:(last_well+1)]
+        if custom_order is None:
+            first_well_index=all_wells.index(first_probe)
+            last_well_index=all_wells.index(last_probe)
+            sel_wells=all_wells[first_well_index:(last_well_index+1)]
+            
+        else:
+            first_well_index=custom_order.index(first_probe)
+            last_well_index=custom_order.index(last_probe)
+            sel_wells=custom_order[first_well_index:(last_well_index+1)]
+            
         sel_coords={}
         for well in sel_wells:
             sel_coords[well]=all_coords[well]
@@ -177,7 +185,7 @@ class Robot():
             for val in seq.values():
                 if val == 'wp':
                     wells_seq += 1
-        wells=len(self.sel_coords.keys())
+        wells=len(self.sel_coord_list)
         num_cycles=wells//wells_seq
         print('Calculated number of cycles is ', num_cycles)
         return num_cycles
@@ -233,13 +241,16 @@ class Robot():
                 except KeyError:
                     logging.error('Invalid probe position: '+str(param))
 
-            elif action == 'pump':
+            elif action in  ['pump', 'pump_A', 'pump_B']:
                 if self.stop.is_set():
                     logging.info('Stopping robot.')
                     raise SystemExit
-                self.pump.pump_cycle(param)
+                if action == 'pump':
+                    self.pump.pump_cycle(param)
+                else:
+                    self.pump.pump_cycle(param, pump=action)
                 time.sleep(1)
-                logging.info('Pump cycle completed for '+str(param))
+                logging.info('Pump cycle completed for '+str(param)+' s.')
 
             elif action == 'pause':
                 if self.stop.is_set():
@@ -294,7 +305,10 @@ class Robot():
             try: 
                 first_well = seq['first_well']
                 last_well = seq['last_well']
-                self.all_coords, self.sel_coords = self.wp_coord_list(seq)
+                if 'custom_well_order' in config.keys(): #Used to define other that A1-A2-...-B1-B2... ordering.
+                    self.all_coords, self.sel_coords = self.wp_coord_list(seq, config['custom_well_order'])
+                else: #Standard ordering
+                    self.all_coords, self.sel_coords = self.wp_coord_list(seq)
                 self.sel_coord_list=list(self.sel_coords.keys())
                 print('Sequence with wells: ', self.sel_coords)
             except KeyError: # If first or last well are not defined.
@@ -462,10 +476,10 @@ class CPP_pump():
         try:
             pump=serial.Serial(port=self.config['pump_port'],timeout=3)  # open serial port
             logging.info('Pump connection established on '+pump.name)
+            return pump
         except serial.SerialException:
             logging.error('No pump found on ' + self.config['pump_port'])
-        return pump
-
+        
     def close(self):
         logging.info('Disconnecting pump.')
         self.pump.close()
@@ -477,7 +491,7 @@ class CPP_pump():
             d = 1 #Counterclockwise direction
             run_time = abs(run_time)
         self.pump.write(('/0S1'+str(self.config['CPP_speed'])+'D'+str(d)+'I1M'+str(run_time*1000)+'I0R\n').encode('utf-8'))
-        logging.info('Running pump for '+str(run_time)+' s.')
+        logging.info('Running pump for in direction '+str(d)+' for '+str(run_time)+' s.')
         time.sleep(run_time)
     
     def stop_pump(self):
@@ -486,15 +500,20 @@ class CPP_pump():
 
 class CPP_pump_dual(CPP_pump):
 
-    def pump_cycle(self, run_time):
-        p = '1' #Pump 1
-        I = '10'
-        if run_time < 0:
-            p = '2' #pump 2
+    def pump_cycle(self, run_time, pump='pump_A'):
+        d = 0 #Clockwise direction
+        if pump == 'pump_A':
+            pump_id = '1'
+            I = '10'
+        elif pump == 'pump_B':
+            pump_id = '2'
             I = '01'
+        if run_time < 0:
             run_time = abs(run_time)
-        self.pump.write(('/0S'+p+str(self.config['CPP_speed'])+'I'+I+'M'+str(run_time*1000)+'I00R\n').encode('utf-8'))
-        logging.info('Running pump for '+str(run_time)+' s.')
+            d = 1 #Counterclockwise direction
+
+        self.pump.write(('/0S'+pump_id+str(self.config['CPP_speed'])+'D'+str(d)+'I1M'+str(run_time*1000)+'I0R\n').encode('utf-8'))
+        logging.info('Running pump '+pump+'  '+str(d)+' for '+str(run_time)+' s.')
         time.sleep(run_time)
 
 class Stage(Robot):

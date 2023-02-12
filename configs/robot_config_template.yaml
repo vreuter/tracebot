@@ -94,3 +94,10 @@ sequences:
       - pump: -10
       - pump: 10
       - pause: 1
+
+custom_well_order:
+ - B1
+ - A1
+ - B2
+ - A2
+ - C4
