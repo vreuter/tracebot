@@ -19,7 +19,7 @@ Upon first run:
 ```
 cd /path/to/shared/folder
 git clone https://git.embl.de/grp-ellenberg/tracebot
-conda create env –f tracebot/environment.yml –p /path/to/local/env
+conda create env –f tracebot/environments/path-to-my-OS-env.yml –p /path/to/local/env
 ```
 
 **Robot setup**
