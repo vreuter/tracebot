@@ -35,6 +35,9 @@ git clone https://github.com/gerlichlab/tracebot.git
 cd tracebot
 conda create -n tracebotenv –f ./environment_definitions/env-linuxlike.yml
 ```
+The `-n` value names the environment being created, and the `-f` value specifies the path to the file which declares the dependencies which should be installed.
+So this would create an environment called `tracebotenv` with the dependencies from `./environment_definitions/env-linuxlike.yml`.
+
 
 ## Setup: robot
  
