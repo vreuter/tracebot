@@ -401,9 +401,10 @@ class Bartels():
     def initialize_pump(self): #Pump communication initialize
         try:
             pump=serial.Serial(port=self.config['pump_port'],timeout=3)  # open serial port
-            logging.info('Pump connection established on '+pump.name)
-        except serial.SerialException:
-            logging.error('No pump found on ' + self.config['pump_port'])
+        except serial.SerialException as e:
+            logging.error(f"Could not connect to pump via port '{self.config['pump_port']}': {e}")
+        else:
+            logging.info(f"Pump connection established: {pump.name}")
         return pump
 
     def close(self):
