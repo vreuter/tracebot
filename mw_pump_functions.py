@@ -1,12 +1,15 @@
-import serial
-import yaml
-import logging
-import time
+"""Data types and utility functions for working with the pump and robot setup"""
+
 import json
 import os
+import logging
 import sys
 from threading import Event
 #from threading import Thread
+import time
+from typing import *
+import serial
+import yaml
 
 '''
 # Before running, ensure correct COM ports are set in yaml file.
