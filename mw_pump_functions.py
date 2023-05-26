@@ -385,28 +385,29 @@ class Robot():
         self.socket_thread.join()
     '''
 
+
+def initialize_pump(port: str, timeout: int, raise_error: bool) -> Optional[serial.Serial]:
+    try:
+        pump = serial.Serial(port=port, timeout=timeout)  # open serial port
+    except serial.SerialException as e:
+        logging.error(f"Could not connect to pump via port '{port}': {e}")
+        if raise_error:
+            raise e
+        return
+    logging.info(f"Pump connection established: {pump.name}")
+    return pump
+
+
 class Bartels():
 
     def __init__(self, config):
         self.config = config
-        try:
-            self.pump = self.initialize_pump()
-            time.sleep(0.2)
-            self.bartels_set_freq(self.config['bartels_freq'])
-            time.sleep(0.5)
-            self.bartels_set_voltage(self.config['bartels_voltage'])
-        except serial.SerialException:
-            logging.error('No pump found on ' + self.config['pump_port'])
-
-    def initialize_pump(self): #Pump communication initialize
-        try:
-            pump=serial.Serial(port=self.config['pump_port'],timeout=3)  # open serial port
-        except serial.SerialException as e:
-            logging.error(f"Could not connect to pump via port '{self.config['pump_port']}': {e}")
-        else:
-            logging.info(f"Pump connection established: {pump.name}")
-        return pump
-
+        self.pump = initialize_pump(port=self.config['pump_port'], timeout=3, raise_error=True)
+        time.sleep(0.2)
+        self.bartels_set_freq(self.config['bartels_freq'])
+        time.sleep(0.5)
+        self.bartels_set_voltage(self.config['bartels_voltage'])
+        
     def close(self):
         logging.info('Disconnecting pump.')
         self.pump.close()
@@ -467,20 +468,9 @@ class CPP_pump():
 
     def __init__(self, config):
         self.config = config
-        try:
-            self.pump = self.initialize_pump()
-            time.sleep(0.2)
-        except serial.SerialException:
-            logging.error('No pump found on ' + self.config['pump_port'])
-
-    def initialize_pump(self): #Pump communication initialize
-        try:
-            pump=serial.Serial(port=self.config['pump_port'],timeout=3)  # open serial port
-            logging.info('Pump connection established on '+pump.name)
-            return pump
-        except serial.SerialException:
-            logging.error('No pump found on ' + self.config['pump_port'])
-        
+        self.pump = initialize_pump(port=self.config['pump_port'], timeout=3, raise_error=True)
+        time.sleep(0.2)
+    
     def close(self):
         logging.info('Disconnecting pump.')
         self.pump.close()
