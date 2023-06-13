@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "tracebot"
+version = "0.1dev"
+description = "General computing utilities for data processing and analysis in the Gerlich group at IMBA"
+authors = [
+    "Kai Sandvold Beckwith",
+]
+readme = "README.md"
+license = "MIT"
+repository = "https://github.com/gerlichlab/tracebot"
+classifiers = [
+    "Development Status :: 1 - Planning",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+
+[tool.poetry.dependencies]
+# These are the main runtime dependencies.
+python = "^3.10.0"
+pyserial = "3.5"
+pysimplegui = "4.60.5"
+pyyaml = "6.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
